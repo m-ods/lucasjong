@@ -1,0 +1,11 @@
+---
+import { photos } from "../data/photos";
+import Photo from "./Photo.astro";
+---
+
+<section class="section wrap" id="work">
+  <h2>Work</h2>
+  <div class="photos">
+    {photos.map((photo) => <Photo photo={photo} />)}
+  </div>
+</section>

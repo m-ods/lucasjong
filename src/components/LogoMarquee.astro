@@ -1,0 +1,21 @@
+---
+import { brands } from "../data/brands";
+
+const loop = [...brands, ...brands];
+---
+
+<div class="marquee" aria-label="Brands worked with">
+  <div class="marquee__track" aria-hidden="true">
+    {
+      loop.map((brand) => (
+        <span class="marquee__item">
+          {brand.logo ? (
+            <img class="marquee__logo" src={brand.logo} alt="" width="160" height="32" />
+          ) : (
+            brand.name
+          )}
+        </span>
+      ))
+    }
+  </div>
+</div>

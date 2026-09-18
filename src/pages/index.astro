@@ -1,17 +1,32 @@
 ---
-
+import Layout from "../layouts/Layout.astro";
+import LogoMarquee from "../components/LogoMarquee.astro";
+import PhotoGrid from "../components/PhotoGrid.astro";
+import NavDock from "../components/NavDock.astro";
+import { site } from "../data/site";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout>
+  <header class="wrap">
+    <p class="brand">{site.handle}</p>
+  </header>
+
+  <main>
+    <section class="hero wrap">
+      <h1>{site.headline}</h1>
+    </section>
+
+    <LogoMarquee />
+    <PhotoGrid />
+
+    <section class="contact wrap" id="contact">
+      <h2>Contact</h2>
+      <p>
+        For bookings and collaborations, email{" "}
+        <a href={`mailto:${site.email}`}>{site.email}</a>.
+      </p>
+    </section>
+  </main>
+
+  <NavDock />
+</Layout>

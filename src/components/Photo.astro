@@ -1,0 +1,44 @@
+---
+import { cdnSrc, srcset } from "../lib/image";
+import type { Photo } from "../data/photos";
+
+interface Props {
+  photo: Photo;
+}
+
+const { photo } = Astro.props;
+const widths = [480, 768, 1200, 1600, 2400].filter((w) => w <= photo.width * 1.5);
+const className = [
+  "photo",
+  `photo--span-${photo.span}`,
+  photo.tall && "photo--tall",
+  photo.wide && "photo--wide",
+  !photo.src && "photo--empty",
+]
+  .filter(Boolean)
+  .join(" ");
+---
+
+<figure class={className}>
+  {
+    photo.src ? (
+      <img
+        src={cdnSrc(photo.src, { width: 1200 })}
+        srcset={srcset(photo.src, widths)}
+        sizes="(min-width: 1024px) 50vw, 100vw"
+        width={photo.width}
+        height={photo.height}
+        alt={photo.alt}
+        loading="lazy"
+        decoding="async"
+      />
+    ) : (
+      <span>{photo.campaign ?? `Photo ${photo.id}`}</span>
+    )
+  }
+  {
+    photo.photographer && (
+      <figcaption class="photo__meta">{photo.photographer}</figcaption>
+    )
+  }
+</figure>
