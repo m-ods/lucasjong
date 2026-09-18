@@ -1,24 +1,45 @@
 ---
-import { photos } from "../data/photos";
+import { shoots } from "../data/shoots";
 import Photo from "./Photo.astro";
 
-const featured = photos.slice(0, 2);
-const rest = photos.slice(2);
+const featured = shoots.slice(0, 2);
+const rest = shoots.slice(2);
 ---
 
 <section class="section wrap" id="work">
   <h2>Work</h2>
 
   <div class="photos-featured">
-    {featured.map((photo, i) => <Photo photo={photo} index={i} />)}
+    {
+      featured.map((shoot, i) => (
+        <Photo photo={shoot.cover} title={shoot.title} shootId={shoot.id} index={i} />
+      ))
+    }
   </div>
 
   <div class="photos">
-    {rest.map((photo, i) => <Photo photo={photo} index={i + featured.length} />)}
+    {
+      rest.map((shoot, i) => (
+        <Photo
+          photo={shoot.cover}
+          title={shoot.title}
+          shootId={shoot.id}
+          index={i + featured.length}
+        />
+      ))
+    }
   </div>
 </section>
 
-<dialog class="lightbox" id="lightbox" aria-label="Photo viewer">
+<div
+  class="lightbox"
+  id="lightbox"
+  hidden
+  role="dialog"
+  aria-modal="true"
+  aria-label="Shoot gallery"
+  tabindex="-1"
+>
   <button type="button" class="lightbox__close" data-close>Close</button>
   <button type="button" class="lightbox__nav lightbox__nav--prev" data-prev aria-label="Previous photo">
     Prev
@@ -28,39 +49,89 @@ const rest = photos.slice(2);
   <button type="button" class="lightbox__nav lightbox__nav--next" data-next aria-label="Next photo">
     Next
   </button>
-</dialog>
+</div>
 
 <script>
-  const items = [...document.querySelectorAll<HTMLButtonElement>(".photo[data-src]")];
-  const dialog = document.querySelector<HTMLDialogElement>("#lightbox");
-  const img = dialog?.querySelector("img");
-  const caption = dialog?.querySelector(".lightbox__caption");
+  import { shoots } from "../data/shoots";
+
+  const lightbox = document.querySelector<HTMLDivElement>("#lightbox");
+  if (lightbox && lightbox.parentElement !== document.body) {
+    document.body.append(lightbox);
+  }
+  const img = lightbox?.querySelector("img");
+  const caption = lightbox?.querySelector(".lightbox__caption");
+  const prevBtn = lightbox?.querySelector<HTMLButtonElement>("[data-prev]");
+  const nextBtn = lightbox?.querySelector<HTMLButtonElement>("[data-next]");
+  let gallery = shoots[0]?.photos ?? [];
   let current = 0;
 
-  function show(index: number) {
-    if (!dialog || !img || !caption) return;
-    current = (index + items.length) % items.length;
-    const item = items[current];
-    img.src = item.dataset.src ?? "";
-    img.alt = item.dataset.alt ?? "";
-    caption.textContent = item.dataset.campaign ?? "";
-    if (!dialog.open) dialog.showModal();
+  function render() {
+    if (!img || !caption || !lightbox) return;
+    const photo = gallery[current];
+    if (!photo) return;
+    img.src = photo.src;
+    img.alt = photo.alt;
+    const shoot = shoots.find((item) => item.photos.some((entry) => entry.id === photo.id));
+    caption.textContent =
+      gallery.length > 1
+        ? `${shoot?.title ?? ""} · ${current + 1} / ${gallery.length}`
+        : (shoot?.title ?? "");
+    const many = gallery.length > 1;
+    if (prevBtn) prevBtn.hidden = !many;
+    if (nextBtn) nextBtn.hidden = !many;
   }
 
-  items.forEach((item, index) => {
-    item.addEventListener("click", () => show(index));
+  function open(shootId: string) {
+    const shoot = shoots.find((item) => item.id === shootId);
+    if (!shoot || !lightbox) return;
+    gallery = shoot.photos;
+    current = 0;
+    render();
+    document.documentElement.classList.add("lightbox-open");
+    lightbox.hidden = false;
+    lightbox.focus({ preventScroll: true });
+  }
+
+  function close() {
+    if (!lightbox || lightbox.hidden) return;
+    lightbox.hidden = true;
+    document.documentElement.classList.remove("lightbox-open");
+  }
+
+  function step(delta: number) {
+    if (gallery.length < 2) return;
+    current = (current + delta + gallery.length) % gallery.length;
+    render();
+  }
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>(".photo[data-shoot]")) {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      open(button.dataset.shoot ?? "");
+    });
+  }
+
+  lightbox?.querySelector("[data-close]")?.addEventListener("click", close);
+  prevBtn?.addEventListener("click", () => step(-1));
+  nextBtn?.addEventListener("click", () => step(1));
+  lightbox?.addEventListener("click", (event) => {
+    if (event.target === lightbox) close();
   });
 
-  dialog?.querySelector("[data-close]")?.addEventListener("click", () => dialog.close());
-  dialog?.querySelector("[data-prev]")?.addEventListener("click", () => show(current - 1));
-  dialog?.querySelector("[data-next]")?.addEventListener("click", () => show(current + 1));
-  dialog?.addEventListener("click", (event) => {
-    if (event.target === dialog) dialog.close();
-  });
+  let touchX = 0;
+  lightbox?.addEventListener("touchstart", (event) => {
+    touchX = event.changedTouches[0]?.clientX ?? 0;
+  }, { passive: true });
+  lightbox?.addEventListener("touchend", (event) => {
+    const dx = (event.changedTouches[0]?.clientX ?? 0) - touchX;
+    if (dx > 50) step(-1);
+    if (dx < -50) step(1);
+  }, { passive: true });
 
   document.addEventListener("keydown", (event) => {
-    if (!dialog?.open) return;
-    if (event.key === "ArrowRight") show(current + 1);
-    if (event.key === "ArrowLeft") show(current - 1);
+    if (!lightbox || lightbox.hidden) return;
+    if (event.key === "Escape") close();
+    if (event.key === "ArrowRight") step(1);
+    if (event.key === "ArrowLeft") step(-1);
   });
 </script>

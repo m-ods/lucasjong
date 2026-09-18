@@ -4,30 +4,139 @@ import sharp from "sharp";
 
 const SRC = "/Users/mart/Downloads/Lucas Jong Portfolio 2";
 const OUT = path.resolve("public/photos");
-const DATA = path.resolve("src/data/photos.ts");
+const DATA = path.resolve("src/data/shoots.ts");
 const MAX = 1600;
 const QUALITY = 78;
 
-const CAMPAIGNS = [
-  { match: /vogue/i, name: "Vogue Singapore", order: 1 },
-  { match: /prada/i, name: "Prada", order: 2 },
-  { match: /chanel/i, name: "Chanel", order: 3 },
-  { match: /fenty/i, name: "Fenty", order: 4 },
-  { match: /adidas/i, name: "adidas", order: 5 },
-  { match: /g[\s-]?shock/i, name: "G-SHOCK", order: 6 },
-  { match: /levi/i, name: "Levi's", order: 7 },
-  { match: /atome/i, name: "Atome", order: 8 },
-  { match: /august/i, name: "August Man", order: 9 },
-  { match: /mens?\s*(folio|'s folio)|men’s folio|mf logo/i, name: "Men's Folio", order: 10 },
-  { match: /elle/i, name: "ELLE Men", order: 11 },
-  { match: /pin[\s-]?prestig/i, name: "PIN Prestige", order: 12 },
-  { match: /mu_se|muse/i, name: "MU/SE", order: 13 },
-  { match: /buzzcut|streething|lv shoot/i, name: "Buzzcut", order: 14 },
-  { match: /by toon/i, name: "By Toon", order: 15 },
-  { match: /wanjie/i, name: "By Wanjie", order: 16 },
-  { match: /arcade/i, name: "Arcade Men", order: 17 },
-  { match: /eejin/i, name: "EEJIN", order: 18 },
-  { match: /ka yong/i, name: "Ka Yong", order: 19 },
+const SHOOTS = [
+  {
+    id: "vogue-2022",
+    title: "Vogue Singapore",
+    order: 1,
+    match: (rel) => /Vogue Cover March 2022/.test(rel) && !rel.includes("Ka Yong"),
+    cover: /SGBODY_VOGUESG_SOCIAL/,
+  },
+  {
+    id: "folio-2021",
+    title: "Men's Folio",
+    order: 2,
+    match: (rel) => /mens folio - grooming/i.test(rel),
+    cover: /photo_2021-06-03/,
+  },
+  {
+    id: "fenty-2021",
+    title: "Fenty",
+    order: 3,
+    match: (rel) => rel.startsWith("Fenty 2021/") && !rel.includes("Fenty 2021/2023"),
+    cover: /1920px Web_/,
+  },
+  {
+    id: "prada-2025",
+    title: "Prada",
+    order: 4,
+    match: (rel) => /PRADA/.test(rel),
+    cover: /_47A5035/,
+  },
+  {
+    id: "chanel-2021",
+    title: "Chanel",
+    order: 5,
+    match: (rel) => /FEMALE chanel/i.test(rel),
+    cover: /Chanel_0366/,
+    skip: /Spread/i,
+  },
+  {
+    id: "adidas-2022",
+    title: "adidas",
+    order: 6,
+    match: (rel) => /ADIDAS SPRING 2022/.test(rel),
+    cover: /Full Body_379-Edit/,
+  },
+  {
+    id: "levis-2025",
+    title: "Levi's",
+    order: 7,
+    match: (rel) => /Levis CNY 2025/.test(rel),
+    cover: /LNY_M_03A_014/,
+  },
+  {
+    id: "augustman-2025",
+    title: "August Man",
+    order: 8,
+    match: (rel) => /Augustman Jul_25/.test(rel),
+    cover: /01_page-0002/,
+    skip: /IMG_0878/,
+  },
+  {
+    id: "pin-2021",
+    title: "PIN Prestige",
+    order: 9,
+    match: (rel) => /Pin Prestigue 2021/i.test(rel),
+    cover: /PIN-Nov-21_Film_S05_03/,
+  },
+  {
+    id: "muse-2026",
+    title: "MU/SE",
+    order: 10,
+    match: (rel) => /MU_SE/.test(rel) && /\/(4X5|Digital Cover)\//.test(rel),
+    cover: /DIGITAL COVER Lucas Jong1/,
+  },
+  {
+    id: "elle-2021",
+    title: "ELLE Men",
+    order: 11,
+    match: (rel) => /ELLE MEN/.test(rel),
+    cover: /20210801-2645RGB/,
+  },
+  {
+    id: "atome-2021",
+    title: "Atome",
+    order: 12,
+    match: (rel) => rel.startsWith("ATOME/"),
+    cover: /Atome_Feb-2828/,
+  },
+  {
+    id: "folio-2025",
+    title: "Men's Folio",
+    order: 13,
+    match: (rel) => /JEWELLERY SPREAD/.test(rel),
+    cover: /JEWELLERY SPREAD3/,
+  },
+  {
+    id: "pin-2022",
+    title: "PIN Prestige",
+    order: 14,
+    match: (rel) => /Pin prestige 2022/i.test(rel) && !rel.includes("Ka Yong"),
+    cover: /PIN-JUN-22_Fashion_0249/,
+  },
+  {
+    id: "buzzcut",
+    title: "Buzzcut",
+    order: 15,
+    match: (rel) => /buzzcut season/.test(rel),
+    cover: /1920px Web__EN_4301-2/,
+  },
+  {
+    id: "wanjie",
+    title: "By Wanjie",
+    order: 16,
+    match: (rel) => /by wanjie/.test(rel),
+    cover: /LUCAS-2/,
+  },
+  {
+    id: "toon-2023",
+    title: "By Toon",
+    order: 17,
+    match: (rel) => /By Toon/.test(rel),
+    cover: /NOW0097/,
+  },
+  {
+    id: "arcade-2021",
+    title: "Arcade Men",
+    order: 18,
+    match: (rel) => /arcademen FEB 2021/.test(rel),
+    cover: /C2\.JPG/i,
+  },
 ];
 
 const EXT = new Set([".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"]);
@@ -44,19 +153,14 @@ async function walk(dir) {
   return files;
 }
 
-function campaignOf(rel) {
-  for (const campaign of CAMPAIGNS) {
-    if (campaign.match.test(rel)) return campaign;
-  }
-  return { name: "Editorial", order: 50 };
+function shootOf(rel) {
+  return SHOOTS.find((shoot) => shoot.match(rel)) ?? null;
 }
 
-function shouldSkip(file, rel, names) {
+function shouldSkip(file, rel, names, shoot) {
   const base = path.basename(file);
   if (/copy/i.test(base)) return true;
-  if (rel.includes("Fenty 2021/2023")) return true;
-  if (rel.startsWith("Ka Yong student proj/2022")) return true;
-  if (/MU_SE.+\/(DP|SP|Page)\//.test(rel)) return true;
+  if (shoot?.skip?.test(base) || shoot?.skip?.test(rel)) return true;
   if (base.startsWith("Print_")) {
     const web = base.replace(/^Print_/, "1920px Web_");
     if (names.has(web)) return true;
@@ -72,134 +176,140 @@ function slugify(value) {
     .replace(/^-|-$/g, "");
 }
 
-function layout(width, height, featured) {
-  const ratio = width / height;
-  if (featured) return { span: "8", tall: ratio < 1, wide: ratio >= 1 };
-  if (ratio > 1.3) return { span: "8", wide: true, tall: false };
-  if (ratio > 0.95) return { span: "6", wide: false, tall: false };
-  return { span: "4", tall: true, wide: false };
+function serializePhoto(photo) {
+  return `{
+    id: ${JSON.stringify(photo.id)},
+    alt: ${JSON.stringify(photo.alt)},
+    width: ${photo.width},
+    height: ${photo.height},
+    src: ${JSON.stringify(photo.src)},
+    src800: ${JSON.stringify(photo.src800)},
+  }`;
 }
 
 const files = await walk(SRC);
 const names = new Set(files.map((file) => path.basename(file)));
 const seen = new Set();
-const selected = files
-  .map((file) => {
-    const rel = path.relative(SRC, file);
-    return { file, rel, campaign: campaignOf(rel) };
-  })
-  .filter((item) => !shouldSkip(item.file, item.rel, names))
-  .sort((a, b) => a.campaign.order - b.campaign.order || a.rel.localeCompare(b.rel))
-  .filter((item) => {
-    const key = path.basename(item.file).toLowerCase();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+const grouped = new Map(SHOOTS.map((shoot) => [shoot.id, []]));
+
+for (const file of files) {
+  const rel = path.relative(SRC, file);
+  const shoot = shootOf(rel);
+  if (!shoot) continue;
+  if (shouldSkip(file, rel, names, shoot)) continue;
+  const key = path.basename(file).toLowerCase();
+  if (seen.has(key)) continue;
+  seen.add(key);
+  grouped.get(shoot.id).push({ file, rel, shoot });
+}
 
 await fs.rm(OUT, { recursive: true, force: true });
 await fs.mkdir(OUT, { recursive: true });
 
-const photos = [];
-const used = new Set();
-let featuredLeft = 1;
+const shoots = [];
 
-for (const item of selected) {
-  const campaignSlug = slugify(item.campaign.name);
-  let n = photos.filter((photo) => photo.campaign === item.campaign.name).length + 1;
-  let id = `${campaignSlug}-${String(n).padStart(3, "0")}`;
-  while (used.has(id)) {
+for (const shoot of [...SHOOTS].sort((a, b) => a.order - b.order)) {
+  const items = grouped.get(shoot.id) ?? [];
+  if (!items.length) {
+    console.warn(`no files for ${shoot.id}`);
+    continue;
+  }
+
+  items.sort((a, b) => {
+    const aCover = shoot.cover.test(a.rel) || shoot.cover.test(path.basename(a.file)) ? 0 : 1;
+    const bCover = shoot.cover.test(b.rel) || shoot.cover.test(path.basename(b.file)) ? 0 : 1;
+    return aCover - bCover || a.rel.localeCompare(b.rel);
+  });
+
+  const photos = [];
+  let n = 0;
+  for (const item of items) {
     n += 1;
-    id = `${campaignSlug}-${String(n).padStart(3, "0")}`;
+    const id = `${shoot.id}-${String(n).padStart(3, "0")}`;
+    try {
+      const image = sharp(item.file, {
+        failOn: "none",
+        sequentialRead: true,
+        limitInputPixels: false,
+      }).rotate();
+      const meta = await image.metadata();
+      const width = meta.width ?? MAX;
+      const height = meta.height ?? MAX;
+      const scale = Math.min(1, MAX / Math.max(width, height));
+      const outW = Math.round(width * scale);
+      const outH = Math.round(height * scale);
+
+      await image
+        .clone()
+        .resize({ width: outW, height: outH, fit: "inside", withoutEnlargement: true })
+        .webp({ quality: QUALITY, effort: 4 })
+        .toFile(path.join(OUT, `${id}.webp`));
+
+      await image
+        .clone()
+        .resize({
+          width: Math.round(outW / 2),
+          height: Math.round(outH / 2),
+          fit: "inside",
+          withoutEnlargement: true,
+        })
+        .webp({ quality: QUALITY, effort: 4 })
+        .toFile(path.join(OUT, `${id}-800.webp`));
+
+      photos.push({
+        id,
+        alt: `${shoot.title} — Lucas Jong`,
+        width: outW,
+        height: outH,
+        src: `/photos/${id}.webp`,
+        src800: `/photos/${id}-800.webp`,
+      });
+      console.log(`ok ${id} ← ${item.rel}`);
+    } catch (error) {
+      console.error(`skip ${item.rel}: ${error.message}`);
+    }
   }
-  used.add(id);
 
-  try {
-    const image = sharp(item.file, {
-      failOn: "none",
-      sequentialRead: true,
-      limitInputPixels: false,
-    }).rotate();
-    const meta = await image.metadata();
-    const width = meta.width ?? MAX;
-    const height = meta.height ?? MAX;
-    const scale = Math.min(1, MAX / Math.max(width, height));
-    const outW = Math.round(width * scale);
-    const outH = Math.round(height * scale);
-
-    await image
-      .clone()
-      .resize({ width: outW, height: outH, fit: "inside", withoutEnlargement: true })
-      .webp({ quality: QUALITY, effort: 4 })
-      .toFile(path.join(OUT, `${id}.webp`));
-
-    const smW = Math.round(outW / 2);
-    const smH = Math.round(outH / 2);
-    await image
-      .clone()
-      .resize({ width: smW, height: smH, fit: "inside", withoutEnlargement: true })
-      .webp({ quality: QUALITY, effort: 4 })
-      .toFile(path.join(OUT, `${id}-800.webp`));
-
-    const featured = featuredLeft > 0;
-    if (featured) featuredLeft -= 1;
-    const { span, tall, wide } = layout(outW, outH, featured);
-
-    photos.push({
-      id,
-      alt: `${item.campaign.name} — Lucas Jong`,
-      width: outW,
-      height: outH,
-      span,
-      tall,
-      wide,
-      campaign: item.campaign.name,
-      src: `/photos/${id}.webp`,
-      src800: `/photos/${id}-800.webp`,
-    });
-
-    console.log(`ok ${id} (${outW}x${outH}) ← ${item.rel}`);
-  } catch (error) {
-    console.error(`skip ${item.rel}: ${error.message}`);
-  }
+  if (!photos.length) continue;
+  shoots.push({
+    id: shoot.id,
+    title: shoot.title,
+    cover: photos[0],
+    photos,
+  });
 }
-
-const serialized = photos.map((photo) => {
-  const extra = [
-    photo.tall ? "tall: true" : null,
-    photo.wide ? "wide: true" : null,
-  ]
-    .filter(Boolean)
-    .join(", ");
-  return `  {
-    id: ${JSON.stringify(photo.id)},
-    alt: ${JSON.stringify(photo.alt)},
-    width: ${photo.width},
-    height: ${photo.height},
-    span: ${JSON.stringify(photo.span)},${extra ? `\n    ${extra},` : ""}
-    campaign: ${JSON.stringify(photo.campaign)},
-    src: ${JSON.stringify(photo.src)},
-    src800: ${JSON.stringify(photo.src800)},
-  }`;
-});
 
 const file = `export type Photo = {
   id: string;
   alt: string;
   width: number;
   height: number;
-  span: "4" | "6" | "8";
-  tall?: boolean;
-  wide?: boolean;
-  campaign?: string;
-  src?: string;
-  src800?: string;
+  src: string;
+  src800: string;
 };
 
-export const photos: Photo[] = [
-${serialized.join(",\n")}
+export type Shoot = {
+  id: string;
+  title: string;
+  cover: Photo;
+  photos: Photo[];
+};
+
+export const shoots: Shoot[] = [
+${shoots
+  .map(
+    (shoot) => `  {
+    id: ${JSON.stringify(shoot.id)},
+    title: ${JSON.stringify(shoot.title)},
+    cover: ${serializePhoto(shoot.cover)},
+    photos: [
+      ${shoot.photos.map(serializePhoto).join(",\n      ")}
+    ],
+  }`,
+  )
+  .join(",\n")}
 ];
 `;
 
 await fs.writeFile(DATA, file);
-console.log(`\nWrote ${photos.length} photos to ${OUT}`);
+console.log(`\nWrote ${shoots.length} shoots / ${shoots.reduce((n, s) => n + s.photos.length, 0)} photos`);
