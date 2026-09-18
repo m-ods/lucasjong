@@ -3,5 +3,5 @@ export const site = {
   handle: "lucasjong",
   headline: "Lucas Jong is a model based out of Singapore.",
   location: "Singapore",
-  email: "bookings@lucasjong.com",
+  email: "hi@lucasjong.com",
 };

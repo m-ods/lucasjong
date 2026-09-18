@@ -1,7 +1,23 @@
 ---
 import { brands } from "../data/brands";
 
-const loop = [...brands, ...brands];
+const logoModules = import.meta.glob<string>("../assets/logos/*.svg", {
+  eager: true,
+  query: "?url",
+  import: "default",
+});
+
+const logos: Record<string, string> = Object.fromEntries(
+  Object.entries(logoModules).map(([path, url]) => {
+    const slug = path.match(/\/([^/]+)\.svg$/)?.[1] ?? "";
+    return [slug, url];
+  }),
+);
+
+const loop = [...brands, ...brands].map((brand) => ({
+  ...brand,
+  logo: brand.logo ?? logos[brand.slug],
+}));
 ---
 
 <div class="marquee" aria-label="Brands worked with">
@@ -10,7 +26,7 @@ const loop = [...brands, ...brands];
       loop.map((brand) => (
         <span class="marquee__item">
           {brand.logo ? (
-            <img class="marquee__logo" src={brand.logo} alt="" width="160" height="32" />
+            <img class="marquee__logo" src={brand.logo} alt="" height="32" />
           ) : (
             brand.name
           )}

@@ -1,11 +1,66 @@
 ---
 import { photos } from "../data/photos";
 import Photo from "./Photo.astro";
+
+const featured = photos.slice(0, 2);
+const rest = photos.slice(2);
 ---
 
 <section class="section wrap" id="work">
   <h2>Work</h2>
+
+  <div class="photos-featured">
+    {featured.map((photo, i) => <Photo photo={photo} index={i} />)}
+  </div>
+
   <div class="photos">
-    {photos.map((photo) => <Photo photo={photo} />)}
+    {rest.map((photo, i) => <Photo photo={photo} index={i + featured.length} />)}
   </div>
 </section>
+
+<dialog class="lightbox" id="lightbox" aria-label="Photo viewer">
+  <button type="button" class="lightbox__close" data-close>Close</button>
+  <button type="button" class="lightbox__nav lightbox__nav--prev" data-prev aria-label="Previous photo">
+    Prev
+  </button>
+  <img alt="" />
+  <p class="lightbox__caption"></p>
+  <button type="button" class="lightbox__nav lightbox__nav--next" data-next aria-label="Next photo">
+    Next
+  </button>
+</dialog>
+
+<script>
+  const items = [...document.querySelectorAll<HTMLButtonElement>(".photo[data-src]")];
+  const dialog = document.querySelector<HTMLDialogElement>("#lightbox");
+  const img = dialog?.querySelector("img");
+  const caption = dialog?.querySelector(".lightbox__caption");
+  let current = 0;
+
+  function show(index: number) {
+    if (!dialog || !img || !caption) return;
+    current = (index + items.length) % items.length;
+    const item = items[current];
+    img.src = item.dataset.src ?? "";
+    img.alt = item.dataset.alt ?? "";
+    caption.textContent = item.dataset.campaign ?? "";
+    if (!dialog.open) dialog.showModal();
+  }
+
+  items.forEach((item, index) => {
+    item.addEventListener("click", () => show(index));
+  });
+
+  dialog?.querySelector("[data-close]")?.addEventListener("click", () => dialog.close());
+  dialog?.querySelector("[data-prev]")?.addEventListener("click", () => show(current - 1));
+  dialog?.querySelector("[data-next]")?.addEventListener("click", () => show(current + 1));
+  dialog?.addEventListener("click", (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (!dialog?.open) return;
+    if (event.key === "ArrowRight") show(current + 1);
+    if (event.key === "ArrowLeft") show(current - 1);
+  });
+</script>
